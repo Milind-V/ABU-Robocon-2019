@@ -1,18 +1,31 @@
 #include <PS2X_lib.h>
+const byte MOTOR_A = 20;
+const byte MOTOR_B = 18;
+
+const float stepcount = 95.00; // 95 Slots in disk
+
+const float wheeldiameter = 100; // Wheel diameter in millimeters
+
+volatile int counter_A = 0;
+volatile int counter_B = 0;
+
+bool autoMode = false;
+int pwm4a = 2;
+int pwm4b = 3;
+
+int pwm2a = 9;
+int pwm2b = 8;
+
+int pwm1a = 4;
+int pwm1b = 5;
+
+int pwm3a = 6;
+int pwm3b = 7;
 
 #define PS2_DAT 13
 #define PS2_CMD 11
 #define PS2_SEL 10
 #define PS2_CLK 12
-
-#define pwm1a 4
-#define pwm1b 5
-#define pwm2a 9
-#define pwm2b 8
-#define pwm3a 6
-#define pwm3b 7
-#define pwm4a 2
-#define pwm4b 3
 
 #define pressures false
 #define rumble false
@@ -31,8 +44,145 @@ int maxSpeed = 90;
 
 PS2X ps2x;
 
+void ISR_countA()
+{
+    counter_A++;
+}
+
+void ISR_countB()
+{
+    counter_B++;
+}
+
+int CMtoSteps(float cm)
+{
+
+    int result;
+    float circumference = (wheeldiameter * 3.14) / 10;
+    float cm_step = circumference / stepcount;
+
+    float f_result = cm / cm_step;
+    result = (int)f_result;
+
+    return result;
+}
+
+void MoveForward(int steps, int mspeed)
+{
+    counter_A = 0;
+    counter_B = 0;
+
+    // Set Motor A forward
+    digitalWrite(pwm2a, LOW);
+    digitalWrite(pwm2b, HIGH);
+    digitalWrite(pwm4a, HIGH);
+    digitalWrite(pwm4b, LOW);
+
+    while (steps > counter_A)
+    {
+
+        if (steps > counter_A)
+        {
+            analogWrite(pwm2a, 0);
+            analogWrite(pwm2b, mspeed);
+            analogWrite(pwm4a, mspeed);
+            analogWrite(pwm4b, 0);
+        }
+        else
+        {
+            analogWrite(pwm4a, 0);
+            analogWrite(pwm4b, 0);
+            analogWrite(pwm2a, 0);
+            analogWrite(pwm2b, 0);
+        }
+    }
+    analogWrite(pwm4a, 0);
+    analogWrite(pwm4b, 0);
+    analogWrite(pwm2a, 0);
+    analogWrite(pwm2b, 0);
+    counter_A = 0;
+    counter_B = 0;
+}
+
+void MoveReverse(int steps, int mspeed)
+{
+    counter_A = 0;
+    counter_B = 0;
+
+    digitalWrite(pwm2a, HIGH);
+    digitalWrite(pwm2b, LOW);
+    digitalWrite(pwm4a, LOW);
+    digitalWrite(pwm4b, HIGH);
+
+    while (steps > counter_A)
+    {
+
+        if (steps > counter_A)
+        {
+            analogWrite(pwm2a, mspeed);
+            analogWrite(pwm2b, 0);
+            analogWrite(pwm4a, 0);
+            analogWrite(pwm4b, mspeed);
+        }
+        else
+        {
+            analogWrite(pwm4a, 0);
+            analogWrite(pwm4b, 0);
+            analogWrite(pwm2a, 0);
+            analogWrite(pwm2b, 0);
+        }
+    }
+    analogWrite(pwm4a, 0);
+    analogWrite(pwm4b, 0);
+    analogWrite(pwm2a, 0);
+    analogWrite(pwm2b, 0);
+    counter_A = 0;
+    counter_B = 0;
+}
+
+void MoveLeft(int steps, int mspeed)
+{
+    counter_A = 0;
+    counter_B = 0;
+
+    analogWrite(pwm1a, HIGH);
+    analogWrite(pwm1b, LOW);
+    analogWrite(pwm3a, HIGH);
+    analogWrite(pwm3b, LOW);
+
+    while (steps > counter_B)
+    {
+
+        if (steps > counter_B)
+        {
+            analogWrite(pwm1a, mspeed);
+            analogWrite(pwm1b, 0);
+            analogWrite(pwm3a, mspeed);
+            analogWrite(pwm3b, 0);
+        }
+        else
+        {
+            analogWrite(pwm1a, 0);
+            analogWrite(pwm1b, 0);
+            analogWrite(pwm3a, 0);
+            analogWrite(pwm3b, 0);
+        }
+    }
+    analogWrite(pwm1a, 0);
+    analogWrite(pwm1b, 0);
+    analogWrite(pwm3a, 0);
+    analogWrite(pwm3b, 0);
+    counter_A = 0;
+    counter_B = 0;
+}
+
 void setup()
 {
+    attachInterrupt(digitalPinToInterrupt(MOTOR_A), ISR_countA, RISING);
+    attachInterrupt(digitalPinToInterrupt(MOTOR_B), ISR_countB, RISING);
+
+    // Test Motor Movement
+
     pinMode(pwm1a, OUTPUT);
     pinMode(pwm1b, OUTPUT);
     pinMode(pwm2a, OUTPUT);
@@ -108,110 +258,161 @@ void loop()
     {
         ps2x.read_gamepad(false, vibrate);
 
-        //Move forward and reverse
-        if (ps2x.Button(PSB_CROSS))
+        Serial.print("Forward =  ");
+        Serial.print(forward);
+        Serial.print("\t");
+
+        Serial.print("Reverse =  ");
+        Serial.print(reverse);
+        Serial.print("\t");
+
+        Serial.print("Right =  ");
+        Serial.print(right);
+        Serial.print("\t");
+
+        Serial.print("Left =  ");
+        Serial.print(left);
+        Serial.print("\t");
+
+        Serial.print("Spin Right =  ");
+        Serial.print(spinright);
+        Serial.print("\t");
+
+        Serial.print("Spin Left =  ");
+        Serial.print(spinleft);
+        Serial.print("\t");
+
+        Serial.println("");
+
+        if (ps2x.ButtonPressed(PSB_SELECT))
+        {
+            autoMode = true;
+        }
+
+        if (ps2x.Button(PSB_CROSS) || ps2x.Button(PSB_PAD_UP))
         {
             forward = 90;
         }
-        if (ps2x.ButtonReleased(PSB_SQUARE))
+        if (ps2x.ButtonReleased(PSB_SQUARE) || ps2x.ButtonReleased(PSB_PAD_UP))
         {
             reverse = 15;
         }
 
-        if (ps2x.Button(PSB_SQUARE))
+        if (ps2x.Button(PSB_SQUARE) || ps2x.Button(PSB_PAD_DOWN))
         {
             reverse = 90;
         }
-        if (ps2x.ButtonReleased(PSB_SQUARE))
+        if (ps2x.ButtonReleased(PSB_SQUARE) || ps2x.ButtonReleased(PSB_PAD_DOWN))
         {
             forward = 15;
         }
-
-        //Move right and left
-        if (ps2x.Analog(PSS_LX) > 128)
+        ///hmm
+        if (ps2x.Button(PSB_PAD_RIGHT))
         {
-            right = (ps2x.Analog(PSS_LX) - 128) * 2;
-            if (right > maxSpeed)
-                right = maxSpeed;
+            right = 90;
         }
-        else if (ps2x.Analog(PSS_LX) < 128)
+        if (ps2x.ButtonReleased(PSB_PAD_RIGHT))
         {
-            left = abs(ps2x.Analog(PSS_LX) - 128) * 2;
-            if (left > maxSpeed)
-                left = maxSpeed;
+            left = 15;
+        }
+        if (ps2x.Button(PSB_PAD_LEFT))
+        {
+            left = 90;
+        }
+        if (ps2x.ButtonReleased(PSB_PAD_LEFT))
+        {
+            right = 15;
+        }
+
+        // //Move right and left
+        // if (ps2x.Analog(PSS_LX) > 128)
+        // {
+        //   right = (ps2x.Analog(PSS_LX) - 128) * 2;
+        //   if (right > maxSpeed)
+        //     right = maxSpeed;
+        // }
+        // else if (ps2x.Analog(PSS_LX) < 128)
+        // {
+        //   left = abs(ps2x.Analog(PSS_LX) - 128) * 2;
+        //   if (left > maxSpeed)
+        //     left = maxSpeed;
+        // }
+        // else
+        // {
+        //   left = 0;
+        // }
+
+        //spinRight
+        if (ps2x.Button(PSB_R1))
+        {
+            spinright = 50;
+        }
+        //spinLeft
+        if (ps2x.Button(PSB_L1))
+        {
+            spinleft = 50;
+        }
+
+        if (autoMode == false)
+        {
+            if ((forward > 0) && reverse == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveForward();
+            }
+            else if ((reverse > 0) && forward == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveReverse();
+            }
+            else if ((right > 0) && forward == 0 && reverse == 0 && left == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveRight();
+            }
+            else if ((left > 0) && forward == 0 && reverse == 0 && right == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveLeft();
+            }
+            else if ((spinright > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinleft == 0)
+            {
+                spinRight();
+            }
+            else if ((spinleft > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinright == 0)
+            {
+                spinLeft();
+            }
+            else
+            {
+                analogWrite(pwm1a, 0);
+                analogWrite(pwm1b, 0);
+                analogWrite(pwm2a, 0);
+                analogWrite(pwm3a, 0);
+                analogWrite(pwm3b, 0);
+                analogWrite(pwm2b, 0);
+                analogWrite(pwm4a, 0);
+                analogWrite(pwm4b, 0);
+            }
         }
         else
         {
-            left = 0;
+            // MoveLeft(CMtoSteps(40), 80);
+            MoveForward(CMtoSteps(90), 80);
+            delay(1000);
+
+            // analogWrite(pwm4a, 0);
+            // analogWrite(pwm4b, 0);
+            // analogWrite(pwm2a, 0);
+            // analogWrite(pwm2b, 0);
+
+            // analogWrite(pwm1a, 0);
+            // analogWrite(pwm1b, 0);
+            // analogWrite(pwm3a, 0);
+            // analogWrite(pwm3b, 0);
+
+            counter_A = 0;
+            counter_B = 0;
+            autoMode = false;
+            //delay(1000);
         }
     }
-
-    //spinRight
-    if (ps2x.Button(PSB_R1))
-    {
-        spinright = 50;
-    }
-    //spinLeft
-    if (ps2x.Button(PSB_L1))
-    {
-        spinleft = 50;
-    }
-
-    Serial.print("Forward =  ");
-    Serial.print(forward);
-    Serial.print("\t");
-
-    Serial.print("Reverse =  ");
-    Serial.print(reverse);
-    Serial.print("\t");
-
-    Serial.print("Right =  ");
-    Serial.print(right);
-    Serial.print("\t");
-
-    Serial.print("Left =  ");
-    Serial.print(left);
-    Serial.print("\t");
-
-    Serial.print("Spin Right =  ");
-    Serial.print(spinright);
-    Serial.print("\t");
-
-    Serial.print("Spin Left =  ");
-    Serial.print(spinleft);
-    Serial.print("\t");
-
-    Serial.println("");
-
-    if ((forward > 0) && reverse == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
-    {
-        moveForward();
-    }
-    else if ((reverse > 0) && forward == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
-    {
-        moveReverse();
-    }
-    else if ((right > 0) && forward == 0 && reverse == 0 && left == 0 && spinright == 0 && spinleft == 0)
-    {
-        moveRight();
-    }
-    else if ((left > 0) && forward == 0 && reverse == 0 && right == 0 && spinright == 0 && spinleft == 0)
-    {
-        moveLeft();
-    }
-    else if ((spinright > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinleft == 0)
-    {
-        spinRight();
-    }
-    else if ((spinleft > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinright == 0)
-    {
-        spinLeft();
-    }
-    else
-    {
-        stopMovement();
-    }
-
 } //end of loop
 
 void moveForward()
