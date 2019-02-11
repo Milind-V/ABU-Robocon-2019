@@ -1,15 +1,16 @@
 #include <PS2X_lib.h>
+
 const byte MOTOR_A = 20;
 const byte MOTOR_B = 18;
-
 const float stepcount = 95.00; // 95 Slots in disk
-
 const float wheeldiameter = 100; // Wheel diameter in millimeters
 
 volatile int counter_A = 0;
 volatile int counter_B = 0;
 
 bool autoMode = false;
+
+int relay1 = 36;
 int pwm4a = 2;
 int pwm4b = 3;
 
@@ -177,7 +178,7 @@ void MoveLeft(int steps, int mspeed)
 }
 
 void setup()
-{
+{pinMode(relay1, OUTPUT);
     attachInterrupt(digitalPinToInterrupt(MOTOR_A), ISR_countA, RISING);
     attachInterrupt(digitalPinToInterrupt(MOTOR_B), ISR_countB, RISING);
 
@@ -239,7 +240,17 @@ void setup()
 }
 
 void loop()
-{
+{   
+    if (ps2x.ButtonReleased(PSB_TRIANGLE)) {
+        digitalWrite(relay1, LOW);
+  
+    }
+    if (ps2x.ButtonReleased(PSB_CIRCLE)) {
+        digitalWrite(relay1, HIGH);
+     
+    }
+    
+        
     forward = 0;
     reverse = 0;
     right = 0;
@@ -394,6 +405,7 @@ void loop()
         else
         {
             // MoveLeft(CMtoSteps(40), 80);
+            autoMode = false;
             MoveForward(CMtoSteps(90), 80);
             delay(1000);
 
@@ -409,7 +421,6 @@ void loop()
 
             counter_A = 0;
             counter_B = 0;
-            autoMode = false;
             //delay(1000);
         }
     }
