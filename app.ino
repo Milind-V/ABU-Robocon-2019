@@ -2,7 +2,7 @@
 
 const byte MOTOR_A = 20;
 const byte MOTOR_B = 18;
-const float stepcount = 95.00; // 95 Slots in disk
+const float stepcount = 95.00;   // 95 Slots in disk
 const float wheeldiameter = 100; // Wheel diameter in millimeters
 
 volatile int counter_A = 0;
@@ -179,265 +179,6 @@ void MoveLeft(int steps, int mspeed)
     counter_B = 0;
 }
 
-void setup()
-{pinMode(relay1, OUTPUT);
-    attachInterrupt(digitalPinToInterrupt(MOTOR_A), ISR_countA, RISING);
-    attachInterrupt(digitalPinToInterrupt(MOTOR_B), ISR_countB, RISING);
-
-    // Test Motor Movement
-
-    pinMode(pwm1a, OUTPUT);
-    pinMode(pwm1b, OUTPUT);
-    pinMode(pwm2a, OUTPUT);
-    pinMode(pwm2b, OUTPUT);
-    pinMode(pwm3a, OUTPUT);
-    pinMode(pwm3b, OUTPUT);
-    pinMode(pwm4a, OUTPUT);
-    pinMode(pwm4b, OUTPUT);
-    Serial.begin(57600);
-    delay(300);
-    error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
-    if (error == 0)
-    {
-        Serial.print("Found Controller, configured successful ");
-        Serial.print("pressures = ");
-        if (pressures)
-            Serial.println("true ");
-        else
-            Serial.println("false");
-        Serial.print("rumble = ");
-        if (rumble)
-            Serial.println("true)");
-        else
-            Serial.println("false");
-        Serial.println("Try out all the buttons, X will vibrate the controller, faster as you press harder;");
-        Serial.println("holding L1 or R1 will print out the analog stick values.");
-        Serial.println("Note: Go to www.billporter.info for updates and to report bugs.");
-    }
-    else if (error == 1)
-        Serial.println("No controller found, check wiring, see readme.txt to enable debug. visit www.billporter.info for troubleshooting tips");
-
-    else if (error == 2)
-        Serial.println("Controller found but not accepting commands. see readme.txt to enable debug. Visit www.billporter.info for troubleshooting tips");
-
-    else if (error == 3)
-        Serial.println("Controller refusing to enter Pressures mode, may not support it. ");
-
-    type = ps2x.readType();
-    switch (type)
-    {
-    case 0:
-        Serial.print("Unknown Controller type found ");
-        break;
-    case 1:
-        Serial.print("DualShock Controller found ");
-        break;
-    case 2:
-        Serial.print("GuitarHero Controller found ");
-        break;
-    case 3:
-        Serial.print("Wireless Sony DualShock Controller found ");
-        break;
-    }
-}
-
-void loop()
-{   
-    // if (ps2x.ButtonReleased(PSB_TRIANGLE)) {
-    //     digitalWrite(relay1, LOW);
-    // }
-    // if (ps2x.ButtonReleased(PSB_CIRCLE)) {
-    //     digitalWrite(relay1, HIGH);
-    // }
-    if (ps2x.ButtonReleased(PSB_TRIANGLE)) {
-        digitalWrite(relay1, LOW);
-    }
-    if (ps2x.ButtonPressed(PSB_TRIANGLE)) {
-        digitalWrite(relay1, HIGH);
-    }
-    
-    if (ps2x.ButtonReleased(PSB_CIRCLE)) {
-        digitalWrite(relay2, LOW);
-    }
-    if (ps2x.ButtonPressed(PSB_CIRCLE)) {
-        digitalWrite(relay2, HIGH);
-    }
-        
-    forward = 0;
-    reverse = 0;
-    right = 0;
-    left = 0;
-    spinright = 0;
-    spinleft = 0;
-
-    if (error == 1) //skip loop
-        return;
-
-    if (type == 2)
-    {
-        ps2x.read_gamepad();
-    }
-    else
-    {
-        ps2x.read_gamepad(false, vibrate);
-
-        Serial.print("Forward =  ");
-        Serial.print(forward);
-        Serial.print("\t");
-
-        Serial.print("Reverse =  ");
-        Serial.print(reverse);
-        Serial.print("\t");
-
-        Serial.print("Right =  ");
-        Serial.print(right);
-        Serial.print("\t");
-
-        Serial.print("Left =  ");
-        Serial.print(left);
-        Serial.print("\t");
-
-        Serial.print("Spin Right =  ");
-        Serial.print(spinright);
-        Serial.print("\t");
-
-        Serial.print("Spin Left =  ");
-        Serial.print(spinleft);
-        Serial.print("\t");
-
-        Serial.println("");
-
-        if (ps2x.ButtonPressed(PSB_SELECT))
-        {
-            autoMode = true;
-        }
-
-        if (ps2x.Button(PSB_CROSS) || ps2x.Button(PSB_PAD_UP))
-        {
-            forward = 90;
-        }
-        if (ps2x.ButtonReleased(PSB_SQUARE) || ps2x.ButtonReleased(PSB_PAD_UP))
-        {
-            reverse = 15;
-        }
-
-        if (ps2x.Button(PSB_SQUARE) || ps2x.Button(PSB_PAD_DOWN))
-        {
-            reverse = 90;
-        }
-        if (ps2x.ButtonReleased(PSB_SQUARE) || ps2x.ButtonReleased(PSB_PAD_DOWN))
-        {
-            forward = 15;
-        }
-        ///hmm
-        if (ps2x.Button(PSB_PAD_RIGHT))
-        {
-            right = 90;
-        }
-        if (ps2x.ButtonReleased(PSB_PAD_RIGHT))
-        {
-            left = 15;
-        }
-        if (ps2x.Button(PSB_PAD_LEFT))
-        {
-            left = 90;
-        }
-        if (ps2x.ButtonReleased(PSB_PAD_LEFT))
-        {
-            right = 15;
-        }
-
-        // //Move right and left
-        // if (ps2x.Analog(PSS_LX) > 128)
-        // {
-        //   right = (ps2x.Analog(PSS_LX) - 128) * 2;
-        //   if (right > maxSpeed)
-        //     right = maxSpeed;
-        // }
-        // else if (ps2x.Analog(PSS_LX) < 128)
-        // {
-        //   left = abs(ps2x.Analog(PSS_LX) - 128) * 2;
-        //   if (left > maxSpeed)
-        //     left = maxSpeed;
-        // }
-        // else
-        // {
-        //   left = 0;
-        // }
-
-        //spinRight
-        if (ps2x.Button(PSB_R1))
-        {
-            spinright = 50;
-        }
-        //spinLeft
-        if (ps2x.Button(PSB_L1))
-        {
-            spinleft = 50;
-        }
-
-        if (autoMode == false)
-        {
-            if ((forward > 0) && reverse == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
-            {
-                moveForward();
-            }
-            else if ((reverse > 0) && forward == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
-            {
-                moveReverse();
-            }
-            else if ((right > 0) && forward == 0 && reverse == 0 && left == 0 && spinright == 0 && spinleft == 0)
-            {
-                moveRight();
-            }
-            else if ((left > 0) && forward == 0 && reverse == 0 && right == 0 && spinright == 0 && spinleft == 0)
-            {
-                moveLeft();
-            }
-            else if ((spinright > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinleft == 0)
-            {
-                spinRight();
-            }
-            else if ((spinleft > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinright == 0)
-            {
-                spinLeft();
-            }
-            else
-            {
-                analogWrite(pwm1a, 0);
-                analogWrite(pwm1b, 0);
-                analogWrite(pwm2a, 0);
-                analogWrite(pwm3a, 0);
-                analogWrite(pwm3b, 0);
-                analogWrite(pwm2b, 0);
-                analogWrite(pwm4a, 0);
-                analogWrite(pwm4b, 0);
-            }
-        }
-        else
-        {
-            // MoveLeft(CMtoSteps(40), 80);
-            autoMode = false;
-            MoveForward(CMtoSteps(90), 80);
-            delay(1000);
-
-            // analogWrite(pwm4a, 0);
-            // analogWrite(pwm4b, 0);
-            // analogWrite(pwm2a, 0);
-            // analogWrite(pwm2b, 0);
-
-            // analogWrite(pwm1a, 0);
-            // analogWrite(pwm1b, 0);
-            // analogWrite(pwm3a, 0);
-            // analogWrite(pwm3b, 0);
-
-            counter_A = 0;
-            counter_B = 0;
-            //delay(1000);
-        }
-    }
-} //end of loop
-
 void moveForward()
 {
     analogWrite(pwm2a, 0);
@@ -505,3 +246,190 @@ void stopMovement()
     analogWrite(pwm4a, 0);
     analogWrite(pwm4b, 0);
 }
+
+void setup()
+{
+    pinMode(relay1, OUTPUT);
+    attachInterrupt(digitalPinToInterrupt(MOTOR_A), ISR_countA, RISING);
+    attachInterrupt(digitalPinToInterrupt(MOTOR_B), ISR_countB, RISING);
+
+    // Test Motor Movement
+
+    pinMode(pwm1a, OUTPUT);
+    pinMode(pwm1b, OUTPUT);
+    pinMode(pwm2a, OUTPUT);
+    pinMode(pwm2b, OUTPUT);
+    pinMode(pwm3a, OUTPUT);
+    pinMode(pwm3b, OUTPUT);
+    pinMode(pwm4a, OUTPUT);
+    pinMode(pwm4b, OUTPUT);
+    Serial.begin(57600);
+    delay(300);
+    error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
+}
+
+void loop()
+{
+
+    if (ps2x.ButtonReleased(PSB_TRIANGLE))
+    {
+        digitalWrite(relay1, LOW);
+    }
+    if (ps2x.ButtonPressed(PSB_TRIANGLE))
+    {
+        digitalWrite(relay1, HIGH);
+    }
+
+    if (ps2x.ButtonReleased(PSB_CIRCLE))
+    {
+        digitalWrite(relay2, LOW);
+    }
+    if (ps2x.ButtonPressed(PSB_CIRCLE))
+    {
+        digitalWrite(relay2, HIGH);
+    }
+
+    forward = 0;
+    reverse = 0;
+    right = 0;
+    left = 0;
+    spinright = 0;
+    spinleft = 0;
+
+    if (error == 1) //skip loop
+        return;
+
+    if (type == 2)
+    {
+        ps2x.read_gamepad();
+    }
+    else
+    {
+        ps2x.read_gamepad(false, vibrate);
+
+        Serial.print("Forward =  ");
+        Serial.print(forward);
+        Serial.print("\t");
+
+        Serial.print("Reverse =  ");
+        Serial.print(reverse);
+        Serial.print("\t");
+
+        Serial.print("Right =  ");
+        Serial.print(right);
+        Serial.print("\t");
+
+        Serial.print("Left =  ");
+        Serial.print(left);
+        Serial.print("\t");
+
+        Serial.print("Spin Right =  ");
+        Serial.print(spinright);
+        Serial.print("\t");
+
+        Serial.print("Spin Left =  ");
+        Serial.print(spinleft);
+        Serial.print("\t");
+
+        Serial.println("");
+
+        if (ps2x.ButtonPressed(PSB_SELECT))
+        {
+            autoMode = true;
+        }
+
+        if (ps2x.Button(PSB_CROSS) || ps2x.Button(PSB_PAD_UP))
+        {
+            forward = maxSpeed;
+        }
+        if (ps2x.ButtonReleased(PSB_SQUARE) || ps2x.ButtonReleased(PSB_PAD_UP))
+        {
+            reverse = 15;
+        }
+
+        if (ps2x.Button(PSB_SQUARE) || ps2x.Button(PSB_PAD_DOWN))
+        {
+            reverse = maxSpeed;
+        }
+        if (ps2x.ButtonReleased(PSB_SQUARE) || ps2x.ButtonReleased(PSB_PAD_DOWN))
+        {
+            forward = 15;
+        }
+        ///hmm
+        if (ps2x.Button(PSB_PAD_RIGHT))
+        {
+            right = maxSpeed;
+        }
+        if (ps2x.ButtonReleased(PSB_PAD_RIGHT))
+        {
+            left = 15;
+        }
+        if (ps2x.Button(PSB_PAD_LEFT))
+        {
+            left = maxSpeed;
+        }
+        if (ps2x.ButtonReleased(PSB_PAD_LEFT))
+        {
+            right = 15;
+        }
+
+        //spinRight
+        if (ps2x.Button(PSB_R1))
+        {
+            spinright = 50;
+        }
+        //spinLeft
+        if (ps2x.Button(PSB_L1))
+        {
+            spinleft = 50;
+        }
+
+        if (autoMode == false)
+        {
+            if ((forward > 0) && reverse == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveForward();
+            }
+            else if ((reverse > 0) && forward == 0 && right == 0 && left == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveReverse();
+            }
+            else if ((right > 0) && forward == 0 && reverse == 0 && left == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveRight();
+            }
+            else if ((left > 0) && forward == 0 && reverse == 0 && right == 0 && spinright == 0 && spinleft == 0)
+            {
+                moveLeft();
+            }
+            else if ((spinright > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinleft == 0)
+            {
+                spinRight();
+            }
+            else if ((spinleft > 0) && forward == 0 && reverse == 0 && right == 0 && left == 0 && spinright == 0)
+            {
+                spinLeft();
+            }
+            else
+            {
+                analogWrite(pwm1a, 0);
+                analogWrite(pwm1b, 0);
+                analogWrite(pwm2a, 0);
+                analogWrite(pwm3a, 0);
+                analogWrite(pwm3b, 0);
+                analogWrite(pwm2b, 0);
+                analogWrite(pwm4a, 0);
+                analogWrite(pwm4b, 0);
+            }
+        }
+        else
+        {
+            autoMode = false;
+            MoveForward(CMtoSteps(90), 80);
+            delay(1000);
+            counter_A = 0;
+            counter_B = 0;
+            //delay(1000);
+        }
+    }
+} //end of loop
