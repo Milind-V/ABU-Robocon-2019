@@ -11,6 +11,8 @@ volatile int counter_B = 0;
 bool autoMode = false;
 
 int relay1 = 36;
+int relay2 = 37;
+
 int pwm4a = 2;
 int pwm4b = 3;
 
@@ -23,10 +25,10 @@ int pwm1b = 5;
 int pwm3a = 6;
 int pwm3b = 7;
 
-#define PS2_DAT 13
-#define PS2_CMD 11
-#define PS2_SEL 10
-#define PS2_CLK 12
+#define PS2_DAT 30
+#define PS2_CMD 33
+#define PS2_SEL 32
+#define PS2_CLK 31
 
 #define pressures false
 #define rumble false
@@ -241,15 +243,25 @@ void setup()
 
 void loop()
 {   
+    // if (ps2x.ButtonReleased(PSB_TRIANGLE)) {
+    //     digitalWrite(relay1, LOW);
+    // }
+    // if (ps2x.ButtonReleased(PSB_CIRCLE)) {
+    //     digitalWrite(relay1, HIGH);
+    // }
     if (ps2x.ButtonReleased(PSB_TRIANGLE)) {
         digitalWrite(relay1, LOW);
-  
     }
-    if (ps2x.ButtonReleased(PSB_CIRCLE)) {
+    if (ps2x.ButtonPressed(PSB_TRIANGLE)) {
         digitalWrite(relay1, HIGH);
-     
     }
     
+    if (ps2x.ButtonReleased(PSB_CIRCLE)) {
+        digitalWrite(relay2, LOW);
+    }
+    if (ps2x.ButtonPressed(PSB_CIRCLE)) {
+        digitalWrite(relay2, HIGH);
+    }
         
     forward = 0;
     reverse = 0;
