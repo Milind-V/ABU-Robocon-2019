@@ -11,23 +11,23 @@ volatile int counter_B = 0;
 bool autoMode = false;
 
 int relay1 = 36;
-int relay2 = 37;
+int relay2 = 38;
 
-int pwm4a = 2;
-int pwm4b = 3;
+int pwm4a = 3;
+int pwm4b = 2;
 
 int pwm2a = 9;
 int pwm2b = 8;
 
-int pwm1a = 4;
-int pwm1b = 5;
+int pwm1a = 5;
+int pwm1b = 4;
 
 int pwm3a = 6;
 int pwm3b = 7;
 
 #define PS2_DAT 30
-#define PS2_CMD 33
-#define PS2_SEL 32
+#define PS2_CMD 32
+#define PS2_SEL 33
 #define PS2_CLK 31
 
 #define pressures false
@@ -72,6 +72,7 @@ int CMtoSteps(float cm)
 
 void MoveForward(int steps, int mspeed)
 {
+    forward = mspeed;
     counter_A = 0;
     counter_B = 0;
 
@@ -109,6 +110,7 @@ void MoveForward(int steps, int mspeed)
 
 void MoveReverse(int steps, int mspeed)
 {
+
     counter_A = 0;
     counter_B = 0;
 
@@ -250,6 +252,7 @@ void stopMovement()
 void setup()
 {
     pinMode(relay1, OUTPUT);
+    pinMode(relay2, OUTPUT);
     attachInterrupt(digitalPinToInterrupt(MOTOR_A), ISR_countA, RISING);
     attachInterrupt(digitalPinToInterrupt(MOTOR_B), ISR_countB, RISING);
 
@@ -266,25 +269,67 @@ void setup()
     Serial.begin(57600);
     delay(300);
     error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
+    if (error == 0)
+    {
+        Serial.print("Found Controller, configured successful ");
+        Serial.print("pressures = ");
+        if (pressures)
+            Serial.println("true ");
+        else
+            Serial.println("false");
+        Serial.print("rumble = ");
+        if (rumble)
+            Serial.println("true)");
+        else
+            Serial.println("false");
+        Serial.println("Try out all the buttons, X will vibrate the controller, faster as you press harder;");
+        Serial.println("holding L1 or R1 will print out the analog stick values.");
+        Serial.println("Note: Go to www.billporter.info for updates and to report bugs.");
+    }
+    else if (error == 1)
+        Serial.println("No controller found, check wiring, see readme.txt to enable debug. visit www.billporter.info for troubleshooting tips");
+
+    else if (error == 2)
+        Serial.println("Controller found but not accepting commands. see readme.txt to enable debug. Visit www.billporter.info for troubleshooting tips");
+
+    else if (error == 3)
+        Serial.println("Controller refusing to enter Pressures mode, may not support it. ");
+
+    type = ps2x.readType();
+    switch (type)
+    {
+    case 0:
+        Serial.print("Unknown Controller type found ");
+        break;
+    case 1:
+        Serial.print("DualShock Controller found ");
+        break;
+    case 2:
+        Serial.print("GuitarHero Controller found ");
+        break;
+    case 3:
+        Serial.print("Wireless Sony DualShock Controller found ");
+        break;
+    }
 }
 
 void loop()
 {
 
-    if (ps2x.ButtonReleased(PSB_TRIANGLE))
+    if (ps2x.ButtonPressed(PSB_TRIANGLE))
     {
         digitalWrite(relay1, LOW);
     }
-    if (ps2x.ButtonPressed(PSB_TRIANGLE))
+    if (ps2x.ButtonPressed(PSB_L2))
     {
         digitalWrite(relay1, HIGH);
     }
 
-    if (ps2x.ButtonReleased(PSB_CIRCLE))
+    if (ps2x.ButtonPressed(PSB_CIRCLE))
     {
         digitalWrite(relay2, LOW);
     }
-    if (ps2x.ButtonPressed(PSB_CIRCLE))
+    if (ps2x.ButtonPressed(PSB_R2))
     {
         digitalWrite(relay2, HIGH);
     }
