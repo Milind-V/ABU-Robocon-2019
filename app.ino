@@ -1,10 +1,5 @@
 #include <PS2X_lib.h>
 
-const byte MOTOR_A = 20;
-const byte MOTOR_B = 18;
-const float stepcount = 95.00;   // 95 Slots in disk
-const float wheeldiameter = 100; // Wheel diameter in millimeters
-
 volatile int counter_A = 0;
 volatile int counter_B = 0;
 
@@ -55,19 +50,6 @@ void ISR_countA()
 void ISR_countB()
 {
     counter_B++;
-}
-
-int CMtoSteps(float cm)
-{
-
-    int result;
-    float circumference = (wheeldiameter * 3.14) / 10;
-    float cm_step = circumference / stepcount;
-
-    float f_result = cm / cm_step;
-    result = (int)f_result;
-
-    return result;
 }
 
 void MoveForward(int steps, int mspeed)
@@ -253,8 +235,6 @@ void setup()
 {
     pinMode(relay1, OUTPUT);
     pinMode(relay2, OUTPUT);
-    attachInterrupt(digitalPinToInterrupt(MOTOR_A), ISR_countA, RISING);
-    attachInterrupt(digitalPinToInterrupt(MOTOR_B), ISR_countB, RISING);
 
     // Test Motor Movement
 
@@ -470,11 +450,6 @@ void loop()
         else
         {
             autoMode = false;
-            MoveForward(CMtoSteps(90), 80);
-            delay(1000);
-            counter_A = 0;
-            counter_B = 0;
-            //delay(1000);
         }
     }
 } //end of loop
