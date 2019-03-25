@@ -3,16 +3,13 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/abu/Downloads/arduino-1.8.8/tools/**",
-                "/home/abu/Downloads/arduino-1.8.8/hardware/arduino/avr/**"
+                "${workspaceFolder}/**"
             ],
-            "forcedInclude": [
-                "/home/abu/Downloads/arduino-1.8.8/hardware/arduino/avr/cores/arduino/Arduino.h"
-            ],
-            "intelliSenseMode": "gcc-x64",
+            "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
         }
     ],
     "version": 4

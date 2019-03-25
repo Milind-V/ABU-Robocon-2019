@@ -1,7 +1,5 @@
 #include <PS2X_lib.h>
 
-bool autoMode = false;
-
 #define relay1 36
 #define relay2 38
 
@@ -14,8 +12,8 @@ bool autoMode = false;
 #define pwm1a 5
 #define pwm1b 4
 
-#define pwm3a = 6
-#define pwm3b = 7
+#define pwm3a 6
+#define pwm3b 7
 
 #define PS2_DAT 30
 #define PS2_CMD 32
@@ -33,7 +31,8 @@ byte vibrate = 0;
 
 PS2X ps2x;
 
-void motor(int p1a, int p1b, int p2a, int p2b, int p3a, int p3b, int p4a, int p4b){
+void motor(int p1a, int p1b, int p2a, int p2b, int p3a, int p3b, int p4a, int p4b)
+{
 
     analogWrite(pwm1a, p1a);
     analogWrite(pwm1b, p1b);
@@ -43,6 +42,31 @@ void motor(int p1a, int p1b, int p2a, int p2b, int p3a, int p3b, int p4a, int p4
     analogWrite(pwm3b, p3b);
     analogWrite(pwm4a, p4a);
     analogWrite(pwm4b, p4b);
+
+    if (p2b > 0 && p4a > 0)
+    {
+        Serial.print("Maju\n");
+    }
+    else if (p2a > 0 && p4b > 0)
+    {
+        Serial.print("Mundur\n");
+    }
+    else if (p1a > 0 && p3a > 0)
+    {
+        Serial.print("Kanan\n");
+    }
+    else if (p1b > 0 && p3b > 0)
+    {
+        Serial.print("Kiri\n");
+    }
+    else if (p1b > 0 && p2b > 0 && p3a > 0 && p4b > 0)
+    {
+        Serial.print("Putar Kanan\n");
+    }
+    else if (p1a > 0 && p2a > 0 && p3b > 0 && p4a > 0)
+    {
+        Serial.print("Putar Kiri\n");
+    }
 }
 
 void setup()
@@ -61,52 +85,12 @@ void setup()
     Serial.begin(57600);
     delay(300);
     error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
-    // if (error == 0)
-    // {
-    //     Serial.print("Found Controller, configured successful ");
-    //     Serial.print("pressures = ");
-    //     if (pressures)
-    //         Serial.println("true ");
-    //     else
-    //         Serial.println("false");
-    //     Serial.print("rumble = ");
-    //     if (rumble)
-    //         Serial.println("true)");
-    //     else
-    //         Serial.println("false");
-    //     Serial.println("Try out all the buttons, X will vibrate the controller, faster as you press harder;");
-    //     Serial.println("holding L1 or R1 will print out the analog stick values.");
-    //     Serial.println("Note: Go to www.billporter.info for updates and to report bugs.");
-    // }
-    // else if (error == 1)
-    //     Serial.println("No controller found, check wiring, see readme.txt to enable debug. visit www.billporter.info for troubleshooting tips");
-
-    // else if (error == 2)
-    //     Serial.println("Controller found but not accepting commands. see readme.txt to enable debug. Visit www.billporter.info for troubleshooting tips");
-
-    // else if (error == 3)
-    //     Serial.println("Controller refusing to enter Pressures mode, may not support it. ");
-
-    // type = ps2x.readType();
-    // switch (type)
-    // {
-    // case 0:
-    //     Serial.print("Unknown Controller type found ");
-    //     break;
-    // case 1:
-    //     Serial.print("DualShock Controller found ");
-    //     break;
-    // case 2:
-    //     Serial.print("GuitarHero Controller found ");
-    //     break;
-    // case 3:
-    //     Serial.print("Wireless Sony DualShock Controller found ");
-    //     break;
-    // }
 }
 
 void loop()
 {
+    ps2x.read_gamepad();
+    motor(0, 0, 0, 0, 0, 0, 0, 0);
 
     if (ps2x.ButtonPressed(PSB_TRIANGLE))
     {
@@ -126,57 +110,46 @@ void loop()
         digitalWrite(relay2, HIGH);
     }
 
-    if (error == 1) //skip loop
-        return;
-
-    if (type == 2)
+    //Tombol SELECT
+    if (ps2x.ButtonPressed(PSB_SELECT))
     {
-        ps2x.read_gamepad();
-    }else
+        autoMode = true;
+    }
+
+    //MAJU
+    if (ps2x.Button(PSB_CROSS) || ps2x.Button(PSB_PAD_UP))
     {
-        ps2x.read_gamepad(false, vibrate);
+        motor(0, 0, 0, maxSpeed, 0, 0, maxSpeed, 0);
+    }
 
-        //Tombol SELECT
-        if (ps2x.ButtonPressed(PSB_SELECT))
-        {
-            autoMode = true;
-        }
+    //MUNDUR
+    if (ps2x.Button(PSB_SQUARE) || ps2x.Button(PSB_PAD_DOWN))
+    {
+        motor(0, 0, 50, 0, 0, 0, 0, 50);
+    }
 
-        //MAJU
-        if (ps2x.Button(PSB_CROSS) || ps2x.Button(PSB_PAD_UP))
-        {
-            motor(0,0,0,maxSpeed,0,0,maxSpeed,0);
-        }
+    ///KANAN
+    if (ps2x.Button(PSB_PAD_RIGHT))
+    {
+        motor(maxSpeed, 0, 0, 0, maxSpeed, 0, 0, 0);
+    }
 
-        //MUNDUR
-        if (ps2x.Button(PSB_SQUARE) || ps2x.Button(PSB_PAD_DOWN))
-        {
-            motor(0,0,50,0,0,0,0,50);
-        }
+    //KIRI
+    if (ps2x.Button(PSB_PAD_LEFT))
+    {
+        motor(0, maxSpeed, 0, 0, 0, maxSpeed, 0, 0);
+    }
 
-        ///KANAN
-        if (ps2x.Button(PSB_PAD_RIGHT))
-        {
-            motor(maxSpeed,0,0,0,maxSpeed,0,0,0);
-        }
+    //PUTAR KANAN
+    if (ps2x.Button(PSB_R1))
+    {
+        motor(0, 50, 0, 50, 50, 0, 0, 50);
+    }
 
-        //KIRI
-        if (ps2x.Button(PSB_PAD_LEFT))
-        {
-            motor(0,maxSpeed,0,0,0,maxSpeed,0,0);
-        }
+    //PUTAR KIRI
+    if (ps2x.Button(PSB_L1))
 
-        //PUTAR KANAN
-        if (ps2x.Button(PSB_R1))
-        {
-            motor(0,50,0,50,50,0,0,50);
-        }
-
-        //PUTAR KIRI
-        if (ps2x.Button(PSB_L1))
-        {
-            motor(50,0,50,0,0,50,50,0);
-        }
-
-    }     
-} //end of loop
+    {
+        motor(50, 0, 50, 0, 0, 50, 50, 0);
+    }
+}
