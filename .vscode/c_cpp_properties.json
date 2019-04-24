@@ -3,18 +3,21 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/abu/Downloads/arduino-1.8.8/tools/**",
-                "/home/abu/Downloads/arduino-1.8.8/hardware/arduino/avr/**",
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/home/abu/Downloads/arduino-1.8.8/libraries/Servo/src",
+                "${workspaceFolder}/*"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",
-            "forcedInclude": [
-                "/home/abu/Downloads/arduino-1.8.8/hardware/arduino/avr/cores/arduino/Arduino.h"
-            ]
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4
