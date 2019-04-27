@@ -1,10 +1,11 @@
 #include <Servo.h>
 #include <PS2X_lib.h>
 
-bool autoMode = false;
-
-#define relay1 36
-#define relay2 38
+#define relay1 22
+#define relay2 23
+#define relay3 24
+// #define relay4 40
+// #define relay5 41
 
 #define pwm4a 5
 #define pwm4b 4
@@ -18,17 +19,17 @@ bool autoMode = false;
 #define pwm3a 6
 #define pwm3b 7
 
-//#define PS2_DAT 30
-//#define PS2_CMD 32
-//#define PS2_SEL 33
-//#define PS2_CLK 31
-
 #define PS2_DAT 30
-#define PS2_CMD 31
-#define PS2_SEL 32
-#define PS2_CLK 33
+#define PS2_CMD 32
+#define PS2_SEL 33
+#define PS2_CLK 31
+//
+//#define PS2_DAT 30
+//#define PS2_CMD 31
+//#define PS2_SEL 32
+//#define PS2_CLK 33
 
-#define maxSpeed 90
+#define maxSpeed 100
 
 #define pressures false
 #define rumble false
@@ -37,7 +38,7 @@ int error = 0;
 byte type = 0;
 byte vibrate = 0;
 
-PS2X ps2x;
+PS2X ps;
 Servo myservo;
 
 void motor(int p1a, int p1b, int p2a, int p2b, int p3a, int p3b, int p4a, int p4b)
@@ -80,10 +81,17 @@ void motor(int p1a, int p1b, int p2a, int p2b, int p3a, int p3b, int p4a, int p4
 
 void setup()
 {
+
     myservo.attach(3);
     myservo.write(90);
     pinMode(relay1, OUTPUT);
     pinMode(relay2, OUTPUT);
+    pinMode(relay3, OUTPUT);
+    digitalWrite(relay1, LOW);
+    digitalWrite(relay2, LOW);
+    digitalWrite(relay3, LOW);
+    // pinMode(relay4, OUTPUT);
+    // pinMode(relay5, OUTPUT);
 
     pinMode(pwm1a, OUTPUT);
     pinMode(pwm1b, OUTPUT);
@@ -95,74 +103,100 @@ void setup()
     pinMode(pwm4b, OUTPUT);
     Serial.begin(57600);
     delay(300);
-    error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
+    error = ps.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);
 }
 
 void loop()
 {
-    ps2x.read_gamepad();
+
+    ps.read_gamepad();
     motor(0, 0, 0, 0, 0, 0, 0, 0);
 
-    if (ps2x.ButtonPressed(PSB_TRIANGLE))
+    //RELAYS
+    if (ps.ButtonPressed(PSB_TRIANGLE))
+    {
+        //RELAY1
+        digitalWrite(relay1, HIGH);
+    }
+    if (ps.ButtonReleased(PSB_TRIANGLE))
     {
         digitalWrite(relay1, LOW);
     }
-    if (ps2x.ButtonPressed(PSB_L2))
-    {
-        digitalWrite(relay1, HIGH);
-    }
 
-    if (ps2x.ButtonPressed(PSB_CIRCLE))
+    if (ps.ButtonPressed(PSB_SQUARE))
+    {
+        //RELAY2
+        digitalWrite(relay2, HIGH);
+    }
+    if (ps.ButtonReleased(PSB_SQUARE))
     {
         digitalWrite(relay2, LOW);
     }
-    if (ps2x.ButtonPressed(PSB_R2))
+
+    if (ps.ButtonPressed(PSB_CIRCLE))
     {
-        digitalWrite(relay2, HIGH);
+        //RELAY3
+        digitalWrite(relay3, HIGH);
+    }
+    if (ps.ButtonReleased(PSB_CIRCLE))
+    {
+        digitalWrite(relay3, LOW);
     }
 
-    //Tombol SELECT
-    if (ps2x.ButtonPressed(PSB_SELECT))
+    // if (ps.ButtonPressed(PSB_R2))
+    // {
+    //     //RELAY4
+    //     digitalWrite(relay4, HIGH);
+    // }
+
+    // if (ps.ButtonPressed(PSB_L2))
+    // {
+    //     //RELAY5
+    //     digitalWrite(relay5, HIGH);
+    // }
+
+    //Tombol SELECT untuk membuka gripper gerege
+    if (ps.ButtonPressed(PSB_SELECT))
     {
         myservo.write(50);
     }
-    if (ps2x.ButtonReleased(PSB_SELECT))
+    if (ps.ButtonReleased(PSB_SELECT))
     {
         myservo.write(90);
     }
 
     //MAJU
-    if (ps2x.Button(PSB_CROSS) || ps2x.Button(PSB_PAD_UP))
+    if (ps.Button(PSB_CROSS) || ps.Button(PSB_PAD_UP))
     {
         motor(0, 0, 0, maxSpeed, 0, 0, maxSpeed, 0);
     }
 
     //MUNDUR
-    if (ps2x.Button(PSB_SQUARE) || ps2x.Button(PSB_PAD_DOWN))
+    if (ps.Button(PSB_PAD_DOWN))
     {
-        motor(0, 0, 50, 0, 0, 0, 0, 50);
+        motor(0, 0, 80, 0, 0, 0, 0, 80);
     }
 
     ///KANAN
-    if (ps2x.Button(PSB_PAD_RIGHT))
+    if (ps.Button(PSB_PAD_RIGHT))
     {
         motor(maxSpeed, 0, 0, 0, maxSpeed, 0, 0, 0);
     }
 
     //KIRI
-    if (ps2x.Button(PSB_PAD_LEFT))
+    if (ps.Button(PSB_PAD_LEFT))
     {
         motor(0, maxSpeed, 0, 0, 0, maxSpeed, 0, 0);
     }
 
     //PUTAR KANAN
-    if (ps2x.Button(PSB_L1))
+    if (ps.Button(PSB_L1))
     {
         motor(0, 50, 0, 50, 50, 0, 0, 50);
     }
 
     //PUTAR KIRI
-    if (ps2x.Button(PSB_R1))
+    if (ps.Button(PSB_R1))
     {
         motor(50, 0, 50, 0, 0, 50, 50, 0);
     }
