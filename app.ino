@@ -4,8 +4,8 @@
 #define relay1 22
 #define relay2 23
 #define relay3 24
-// #define relay4 40
-// #define relay5 41
+#define relay4 25
+#define relay5 26
 
 #define pwm4a 5
 #define pwm4b 4
@@ -29,7 +29,7 @@
 //#define PS2_SEL 32
 //#define PS2_CLK 33
 
-#define maxSpeed 100
+#define maxSpeed 255
 
 #define pressures false
 #define rumble false
@@ -90,8 +90,8 @@ void setup()
     digitalWrite(relay1, LOW);
     digitalWrite(relay2, LOW);
     digitalWrite(relay3, LOW);
-    // pinMode(relay4, OUTPUT);
-    // pinMode(relay5, OUTPUT);
+    pinMode(relay4, OUTPUT);
+    pinMode(relay5, OUTPUT);
 
     pinMode(pwm1a, OUTPUT);
     pinMode(pwm1b, OUTPUT);
@@ -143,17 +143,21 @@ void loop()
         digitalWrite(relay3, LOW);
     }
 
-    // if (ps.ButtonPressed(PSB_R2))
-    // {
-    //     //RELAY4
-    //     digitalWrite(relay4, HIGH);
-    // }
+    if (ps.ButtonPressed(PSB_R2))
+    {
+        //RELAY4
+        digitalWrite(relay4, HIGH);
+    }
+    if (ps.ButtonReleased(PSB_R2))
+    {
+        digitalWrite(relay4, LOW);
+    }
 
-    // if (ps.ButtonPressed(PSB_L2))
-    // {
-    //     //RELAY5
-    //     digitalWrite(relay5, HIGH);
-    // }
+    if (ps.ButtonPressed(PSB_L2))
+    {
+        //RELAY5
+        digitalWrite(relay5, HIGH);
+    }
 
     //Tombol SELECT untuk membuka gripper gerege
     if (ps.ButtonPressed(PSB_SELECT))
@@ -174,7 +178,7 @@ void loop()
     //MUNDUR
     if (ps.Button(PSB_PAD_DOWN))
     {
-        motor(0, 0, 80, 0, 0, 0, 0, 80);
+        motor(0, 0, 100, 0, 0, 0, 0, 100);
     }
 
     ///KANAN
@@ -192,12 +196,12 @@ void loop()
     //PUTAR KANAN
     if (ps.Button(PSB_L1))
     {
-        motor(0, 50, 0, 50, 50, 0, 0, 50);
+        motor(0, 60, 0, 60, 60, 0, 0, 60);
     }
 
     //PUTAR KIRI
     if (ps.Button(PSB_R1))
     {
-        motor(50, 0, 50, 0, 0, 50, 50, 0);
+        motor(60, 0, 60, 0, 0, 60, 60, 0);
     }
 }
