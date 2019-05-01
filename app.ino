@@ -23,13 +23,8 @@
 #define PS2_CMD 32
 #define PS2_SEL 33
 #define PS2_CLK 31
-//
-//#define PS2_DAT 30
-//#define PS2_CMD 31
-//#define PS2_SEL 32
-//#define PS2_CLK 33
 
-#define maxSpeed 255
+#define maxSpeed 190
 
 #define pressures false
 #define rumble false
@@ -157,6 +152,10 @@ void loop()
     {
         //RELAY5
         digitalWrite(relay5, HIGH);
+    }
+    if (ps.ButtonReleased(PSB_L2))
+    {
+        digitalWrite(relay5, LOW);
     }
 
     //Tombol SELECT untuk membuka gripper gerege
